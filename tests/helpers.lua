@@ -6,15 +6,15 @@ local function Layer(args)
   }
 end
 
-local function Polygon(args)
+local function Polygon(args,properties)
   return {
-    type = "Feature", geometry = { type = "Polygon", coordinates = { args } }
+    type = "Feature", properties=properties, geometry = { type = "Polygon", coordinates = { args } }
   }
 end
 
-local function MultiPoint(args)
+local function MultiPoint(args,properties)
   return {
-    type = "Feature", geometry = { type = "MultiPoint", coordinates = { args } }
+    type = "Feature", properties=properties, geometry = { type = "MultiPoint", coordinates = { args } }
   }
 end
 

@@ -1,0 +1,52 @@
+local libtopoheight = require 'libtopoheight'
+local helpers = require 'helpers'
+
+local EPSILON = 0.000001
+
+local Layer, Polygon, MultiPoint = helpers.Layer, helpers.Polygon, helpers.MultiPoint
+
+TestHeight = {}
+
+local polygon = Polygon { {0,0,100}, {1,0,200}, {1,1,300}, {0,1,400} }
+
+local test_cases = {
+  --on edges
+  [{0.5,0.0}] = math.max(100,200),
+  [{1.0,0.5}] = math.max(200,300),
+  [{0.5,1.0}] = math.max(300,400),
+  [{0.0,0.5}] = math.max(100,400),
+  --inside
+  --[{0.1,0.1}] = math.max(100,200,400),
+}
+
+for k,v in ipairs( polygon.geometry.coordinates[1] ) do
+  local x,y,alt = v[1],v[2],v[3]
+  TestHeight['testInPoints_'..x..'_'..y] = function()
+    local obj = libtopoheight.new()
+    assertNotIsNil(obj)
+    local rc = obj:load_buffer( Layer { polygon } )
+    assertEquals(rc,0)
+    local rc = obj:triangulate()
+    assertEquals(rc,0)
+    local rc,h = obj:get_alt(x,y)
+    assertEquals(rc, 0)
+    assertAlmostEquals(h, alt)
+    obj:destroy()
+  end
+end
+
+for k,v in pairs(test_cases) do
+  local x,y,alt = k[1],k[2],v
+  TestHeight['testCase_'..x..'_'..y] = function()
+    local obj = libtopoheight.new()
+    assertNotIsNil(obj)
+    local rc = obj:load_buffer( Layer { polygon } )
+    assertEquals(rc,0)
+    local rc = obj:triangulate()
+    assertEquals(rc,0)
+    local rc,h = obj:get_alt(x,y)
+    assertEquals(rc, 0)
+    assertAlmostEquals(h, alt)
+    obj:destroy()
+  end
+end

@@ -70,11 +70,13 @@ inline void get_coords(const rapidjson::Value& arr,Relief& relief, const double*
 }
 
 inline bool feature_get_altitude_property(const rapidjson::Value& feature,std::string const& prop,double& out_val) {
-  if(prop.empty() || !feature.HasMember("properties"))
+  if(prop.empty() || !feature.HasMember("properties")) {
     return false;
-  const rapidjson::Value& properties = feature["properties"];
-  if(feature.HasMember(prop.c_str()))
-    return get_double(feature[prop.c_str()],out_val);
+  }
+  const rapidjson::Value& props = feature["properties"];
+  if(props.HasMember(prop.c_str())) {
+    return get_double(props[prop.c_str()],out_val);
+  }
   return false;
 }
 
@@ -91,7 +93,9 @@ inline Relief get_geo_json_points(std::string const& json, std::string const& pr
         const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
         double prop_value = 0;
         const bool has_prop = feature_get_altitude_property(feature,prop,prop_value);
-        get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+        if( has_prop || prop.empty() ) {
+          get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+        }
     }
     return relief;
 }

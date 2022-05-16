@@ -30,6 +30,7 @@ function TestLoadBuffer:testPolygon_Doubles_3points()
 
   local rc = obj:triangulate()
   assertEquals(rc,0)
+
   local _,_, triangles = obj:debug_get_counts()
   assertEquals(triangles / 3,1)
   assertEquals(triangles % 3,0)
@@ -53,6 +54,7 @@ function TestLoadBuffer:testPolygon_Doubles_4points()
 
   local rc = obj:triangulate()
   assertEquals(rc,0)
+
   local _,_, triangles = obj:debug_get_counts()
   assertEquals(triangles / 3,2)
   assertEquals(triangles % 3,0)
@@ -77,6 +79,7 @@ function TestLoadBuffer:testPolygon_Doubles_5points()
 
   local rc = obj:triangulate()
   assertEquals(rc,0)
+
   local _,_, triangles = obj:debug_get_counts()
   assertEquals(triangles / 3,3)
   assertEquals(triangles % 3,0)
