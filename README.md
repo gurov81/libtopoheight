@@ -26,7 +26,45 @@ make
 
 Пример вывода результатов:
 ```
-Started on Wed May  4 16:03:12 2022
+sun@gurov:~/projects/heightmap/libtopoheight/build$ cmake ..
+-- The C compiler identification is GNU 7.5.0
+-- The CXX compiler identification is GNU 7.5.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/sun/projects/heightmap/libtopoheight/build
+sun@gurov:~/projects/heightmap/libtopoheight/build$ make -j
+Scanning dependencies of target topoheight
+[ 40%] Building C object CMakeFiles/topoheight.dir/third_party/rtree.c/rtree.c.o
+[ 40%] Building CXX object CMakeFiles/topoheight.dir/source/libtopoheight.cpp.o
+[ 60%] Building CXX object CMakeFiles/topoheight.dir/source/picture.cpp.o
+[ 80%] Linking CXX shared library topoheight.so
+[ 80%] Built target topoheight
+Scanning dependencies of target topoheight-test
+[100%] testing libtopoheight
+Started on Mon May 16 12:11:09 2022
+    TestHeight.testCase_0.5_0 ... Ok
+    TestHeight.testCase_0.5_1 ... Ok
+    TestHeight.testCase_0_0.5 ... Ok
+    TestHeight.testCase_1_0.5 ... Ok
+    TestHeight.testInPoints_0_0 ... Ok
+    TestHeight.testInPoints_0_1 ... Ok
+    TestHeight.testInPoints_1_0 ... Ok
+    TestHeight.testInPoints_1_1 ... Ok
+    TestHeightProperty.test1 ... Ok
+    TestHeightmap.testPolygon_WithColorCallback ... Ok
+    TestHeightmap.testRead_LAYER6 ... Ok
     TestLoadBuffer.testMalformed_JSON ... Cannot parse JSON
 Ok
     TestLoadBuffer.testMultiPoint_Doubles ... Ok
@@ -34,10 +72,12 @@ Ok
     TestLoadBuffer.testPolygon_Doubles_4points ... Ok
     TestLoadBuffer.testPolygon_Doubles_5points ... Ok
     TestLoadBuffer.testPolygon_Integers ... Ok
-    TestLoadFile.testReadFile ... Ok
+    TestLoadFile.testRead_LAYER13 ... Ok
+    TestLoadFile.testRead_LAYER6 ... Ok
 =========================================================
-Ran 7 tests in 0.505 seconds, 7 successes, 0 failures
+Ran 19 tests in 2.690 seconds, 19 successes, 0 failures
 OK
+[100%] Built target topoheight-test
 ```
 
 Краткое описание
