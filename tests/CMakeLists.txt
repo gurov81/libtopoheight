@@ -16,4 +16,4 @@ add_custom_command(
     #RESULT_VARIABLE rc
     COMMENT "testing libtopoheight"
   )
-add_custom_target( topoheight-test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_stamp )
+add_custom_target( topoheight-test ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_stamp topoheight)
