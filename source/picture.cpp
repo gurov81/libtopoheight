@@ -11,7 +11,6 @@
 #include <cassert>
 
 #include <png.h>
-#include <turbojpeg.h>
 
 
 #define FFMIN(a,b) (((a)<(b))?(a):(b))
@@ -38,19 +37,6 @@ struct png_write_context {
         self->size+=length;
     }
 };
-struct jpg_write_context {
-    unsigned char* buf;
-    unsigned long size;
-    void* jpegCompressor;
-    jpg_write_context() : buf(0),size(0) {
-        jpegCompressor = tjInitCompress();
-    }
-    ~jpg_write_context() {
-        tjFree(buf);
-        tjDestroy(jpegCompressor);
-    }
-};
-
 
 struct picture_t {
     int width;
@@ -59,10 +45,6 @@ struct picture_t {
         png_write_context* ctx;
         png_bytep row;
     } png;
-    struct {
-        jpg_write_context* ctx;
-        unsigned char* src;
-    } jpg;
 };
 
 
@@ -72,30 +54,19 @@ extern "C" picture_t* picture_create(int width,int height) {
     self->height = height;
     self->png.ctx = 0;
     self->png.row = (png_bytep) malloc (3 * self->width * sizeof (png_byte));
-    self->jpg.ctx = 0;
-    self->jpg.src = (unsigned char*) malloc (3 * self->width * self->height * sizeof (unsigned char));
     return self;
 }
 
 extern "C" void picture_destroy(picture_t* self) {
     free(self->png.row);
-    free(self->jpg.src);
     delete self->png.ctx;
-    delete self->jpg.ctx;
     delete self;
 }
 
 extern "C" /*const*/ char* picture_get(picture_t* self,int type,int* size) {
-    if(type==0) {
-        *size = self->png.ctx ? self->png.ctx->size : 0;
-        return self->png.ctx ? self->png.ctx->buf : 0;
-    }
-    if(type==1) {
-        *size = self->jpg.ctx ? self->jpg.ctx->size : 0;
-        return self->jpg.ctx ? (char*)self->jpg.ctx->buf : 0;
-    }
-    *size = 0;
-    return 0;
+    (void)type;
+     *size = self->png.ctx ? self->png.ctx->size : 0;
+     return self->png.ctx ? self->png.ctx->buf : 0;
 }
 
 extern "C" void picture_write_png(picture_t* self,unsigned int* data,const char* path)
@@ -154,14 +125,13 @@ extern "C" void picture_write_png(picture_t* self,unsigned int* data,const char*
      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
   // Set title
-  char *title = "Screenshot";
-  if (title != NULL){
-    png_text title_text;
-    title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-    title_text.key = "Title";
-    title_text.text = title;
-    png_set_text (png_ptr, png_info_ptr, &title_text, 1);
-  }
+  char text[] = "Screenshot";
+  char key[] = "Title";
+  png_text title_text;
+  title_text.compression = PNG_TEXT_COMPRESSION_NONE;
+  title_text.key = key;
+  title_text.text = text;
+  png_set_text (png_ptr, png_info_ptr, &title_text, 1);
 
   png_write_info (png_ptr, png_info_ptr);
 
@@ -197,38 +167,4 @@ extern "C" void picture_write_png(picture_t* self,unsigned int* data,const char*
   if(fp) {
     fclose (fp);
   }
-}
-
-extern "C" void picture_write_jpeg(picture_t* self,unsigned int* data,const char* path) {
-  int width = self->width;
-  int height = self->height;
-
-  if(!self->jpg.ctx) self->jpg.ctx = new jpg_write_context;
-
-  unsigned char* src = self->jpg.src;
-
-  const unsigned long blue_mask  = 0x000000ff;
-  const unsigned long green_mask = 0x0000ff00;
-  const unsigned long red_mask   = 0x00ff0000;
-  // Write image data
-  for (int y = 0; y < height; y++){
-    for (int x = 0; x < width; x++){
-        unsigned long pixel = data[y*width+x];//XGetPixel (image, x, y);
-        unsigned char blue  = pixel & blue_mask;
-        unsigned char green = (pixel & green_mask) >> 8;
-        unsigned char red   = (pixel & red_mask) >> 16;
-
-        unsigned char *ptr = &(src[3*(y*width+x)]);
-        ptr[0] = red;
-        ptr[1] = green;
-        ptr[2] = blue;
-    }
-  }
-
-  int quality = 70; //1-100
-  //self->jpg.ctx->size = 0;
-  int rc = tjCompress2( self->jpg.ctx->jpegCompressor, src, width, 0, height, TJPF_RGB,//TJPF_RGBX,
-                  &self->jpg.ctx->buf, &self->jpg.ctx->size, TJSAMP_444, quality/*JPEG_QUALITY*/,
-                  TJFLAG_FASTDCT);
-  //printf("write jpeg size=%d rc=%d\n",tmp,rc);
 }

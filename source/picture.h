@@ -12,7 +12,6 @@ void picture_destroy(struct picture_t* self);
 /*const*/ char* picture_get(struct picture_t* self,int type,int* size);
 
 void picture_write_png(struct picture_t* self,unsigned int* data,const char* path);
-void picture_write_jpeg(struct picture_t* self,unsigned int* data,const char* path);
 
 
 #ifdef __cplusplus
