@@ -2,7 +2,7 @@
 #define __TRIANGLE_HPP__
 
 // https://stackoverflow.com/questions/2049582/how-to-determine-if-a-point-is-in-a-2d-triangle
-
+// https://stackoverflow.com/questions/39908607/how-to-determine-if-a-point-is-in-the-edge-boundaries-of-a-2d-triangle
 struct fPoint {
   float x; float y;
   fPoint(float a,float b):x(a),y(b) {}
