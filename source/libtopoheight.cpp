@@ -166,12 +166,15 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
   if(      dist(pt,t1) < EPS ) {ud->alt=alt[0]; log("ALT=alt1 => %3.3f\n",ud->alt);}
   else if( dist(pt,t2) < EPS ) {ud->alt=alt[1]; log("ALT=alt2 => %3.3f\n",ud->alt);}
   else if( dist(pt,t3) < EPS ) {ud->alt=alt[2]; log("ALT=alt3 => %3.3f\n",ud->alt);}
+#if 1
   //на сторонах треугольника возвращаем максимум из высот соответствующих вершин
   //см https://stackoverflow.com/questions/39908607/how-to-determine-if-a-point-is-in-the-edge-boundaries-of-a-2d-triangle
   else if( std::abs(dd[0]) < EPS ) {ud->alt=std::max(alt[0],alt[1]); log("ALT=alt12 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[0],alt[1]);}
   else if( std::abs(dd[1]) < EPS ) {ud->alt=std::max(alt[1],alt[2]); log("ALT=alt23 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[1],alt[2]);}
   else if( std::abs(dd[2]) < EPS ) {ud->alt=std::max(alt[0],alt[2]); log("ALT=alt13 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[0],alt[2]);}
-  else {
+#endif
+  else
+  {
     //точка внутри треугольника
 #if 0
     //максимум из высот трех вершин

@@ -38,7 +38,7 @@ function TestHeightmap:testPolygon_WithColorCallback()
   assertNotIsNil(obj)
 
   local rc = obj:load_buffer( Layer {
-    Polygon { {0,0,100}, {0,10,200}, {10,10,300}, {10,0,400} }
+    Polygon { {0,0,100}, {10,0,200}, {10,10,300}, {0,10,400} }
   })
   assertEquals(rc,0)
 
@@ -58,9 +58,32 @@ function TestHeightmap:testPolygon_WithColorCallback()
     local blue = 0xff*(alt-100)/300
     return blue
   end
+  local function get_altitude_color_v2(alt) --0xAARRGGBB
+    local red,green,blue,white = 0x00FF0000,0x0000FF00,0x000000FF,0x00FFFFFF
+    if     math.abs(alt-100)<50 then return red
+    elseif math.abs(alt-200)<50 then return green
+    elseif math.abs(alt-300)<50 then return blue
+    elseif math.abs(alt-400)<50 then return white end
+    return 0
+  end
 
-  local rc = obj:get_heightmap({-10,-10,20,20},1024,1024,"2.png",get_altitude_color)
+  local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png",get_altitude_color)
   assertEquals(rc,0)
+
+  local str = helpers.dump_altitude_matrix(obj,{0,10,1},{0,10,1})
+  --print(str)
+  assertEquals(str,[[
+400 400 400 400 400 400 400 400 400 400 300
+400 352 334 319 308 300 296 294 294 300 300
+400 329 319 308 300 294 291 290 300 256 300
+400 306 300 295 290 287 285 300 236 242 300
+400 283 281 279 278 277 300 220 226 230 300
+400 260 261 263 265 300 206 212 217 220 300
+400 236 240 245 300 194 200 205 209 212 300
+400 210 218 300 180 188 195 200 204 206 300
+400 182 300 164 174 183 191 196 200 202 300
+400 300 144 158 170 180 188 194 198 200 300
+100 200 200 200 200 200 200 200 200 200 200]])
 
   obj:destroy()
 end
