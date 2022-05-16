@@ -1,10 +1,14 @@
-#ifdef __LIBTOPOHEIGHT_H__INCLUDED__
+#ifndef __LIBTOPOHEIGHT_H__INCLUDED__
+#define __LIBTOPOHEIGHT_H__INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct context;
+
+//функция-колбек получения пикселя по значению высоты
+typedef unsigned int (*get_color_cb)(double);
 
 //создание и удаление контекста
 struct context* libtopoheight_create();
@@ -22,7 +26,7 @@ int libtopoheight_triangulate(struct context* ctx);
 int libtopoheight_get_alt(struct context* ctx,const double coord[2], double out_alt[1]);
 
 //генерация heightmap
-int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int width,int height,const char* filename);
+int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int width,int height,const char* filename,get_color_cb cb);
 
 //отладочные функции
 void libtopoheight_debug_get_counts(struct context* ctx,size_t counts[3]);

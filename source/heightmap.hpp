@@ -1,7 +1,7 @@
 #ifndef __HEIGHTMAP_HPP__
 #define __HEIGHTMAP_HPP__
 
-inline unsigned long get_altitude_color(double alt) {
+inline unsigned int get_altitude_color(double alt) {
   int r=0,g=0,b=0;
 
 #if 0
@@ -34,7 +34,7 @@ inline unsigned long get_altitude_color(double alt) {
   const unsigned long green_mask = 0x0000ff00;
   const unsigned long red_mask   = 0x00ff0000;
   */
-  unsigned long pixel = b | (g<<8) | (r<<16); //0xAARRGGBB
+  unsigned int pixel = b | (g<<8) | (r<<16); //0xAARRGGBB
   return pixel;
 }
 

@@ -19,7 +19,7 @@ struct context {
 extern "C" {
 #endif
 
-void* libtopoheight_create() {
+struct context* libtopoheight_create() {
   struct context* ctx = new context;
   ctx->rtree = rtree_new( sizeof(size_t), 2 );
   return ctx;
@@ -208,7 +208,7 @@ int libtopoheight_get_alt(struct context* ctx,const double coord[2], double out_
   return 0;
 }
 
-int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int width,int height,const char* filename) {
+int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int width,int height,const char* filename,get_color_cb cb) {
   struct picture_t* pic = picture_create(width,height);
   if(!pic) return 1;
   int size = width*height*4;
@@ -229,7 +229,7 @@ int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int wi
       int i = x+y*width;
       data[i] = 0;
       if(rc==0) {
-        data[i] = get_altitude_color(alt);
+        data[i] = cb ? cb(alt) : get_altitude_color(alt);
       }
       //printf("HEIGHTMAP: %d,%d rc=%d alt=%3.3f\n",x,y,rc,alt);
     }
