@@ -9,7 +9,7 @@ libtopoheight
 Для Ubuntu Linux:
 
 ```bash
-sudo apt install build-essential cmake luajit
+sudo apt install build-essential cmake luajit libpng-dev
 ```
 
 Сборка и проверка
