@@ -12,6 +12,12 @@ local function Polygon(args,properties)
   }
 end
 
+local function LineString(args,properties)
+  return {
+    type = "Feature", properties=properties, geometry = { type = "LineString", coordinates = { args } }
+  }
+end
+
 local function MultiPoint(args,properties)
   return {
     type = "Feature", properties=properties, geometry = { type = "MultiPoint", coordinates = { args } }
@@ -37,6 +43,7 @@ end
 return {
   Layer = Layer,
   Polygon = Polygon,
+  LineString = LineString,
   MultiPoint = MultiPoint,
   dump_altitude_matrix = dump_altitude_matrix,
 }
