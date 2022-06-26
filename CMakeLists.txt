@@ -11,6 +11,7 @@ include_directories(SYSTEM
   third_party
   third_party/delaunator-cpp/include
   third_party/rtree.c
+  third_party/CDT/include
 )
 add_library(topoheight SHARED
   source/libtopoheight.cpp

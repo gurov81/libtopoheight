@@ -5,12 +5,19 @@
 #include <string>
 #include <vector>
 #include "rapidjson/document.h"
+#include "CDT.h"
 
 namespace utils {
+
+struct CustomEdge
+{
+    std::pair<std::size_t, std::size_t> vertices;
+};
 
 struct Relief {
   std::vector<double> coords;
   std::vector<double> altitudes;
+  std::vector<CustomEdge> edges;
 };
 
 inline std::string read_file(const char* filename) {
@@ -52,13 +59,23 @@ inline void get_altitude(const rapidjson::Value& arr,Relief& relief, const doubl
   throw std::runtime_error("No altitude data");
 }
 
+inline bool feature_get_altitude_property(const rapidjson::Value& feature,std::string const& prop,double& out_val) {
+  if(prop.empty() || !feature.HasMember("properties")) {
+    return false;
+  }
+  const rapidjson::Value& props = feature["properties"];
+  if(props.HasMember(prop.c_str())) {
+    return get_double(props[prop.c_str()],out_val);
+  }
+  return false;
+}
 
 inline void get_coords(const rapidjson::Value& arr,Relief& relief, const double* prop_value ) {
   if(!arr.IsArray()) return;
   double x=0.0, y=0.0;
   if( get_double(arr[0],x) && get_double(arr[1],y) ) {
     relief.coords.push_back(x);
-    relief.coords.push_back(y);
+    relief.coords.push_back(y);    
     get_altitude(arr,relief,prop_value);
     return;
   }  
@@ -91,7 +108,7 @@ inline void add_points(const rapidjson::Value& arr,Relief& relief, const double*
     get_double(arr[i][2],tmp_alt[i]);
   }
   
-  int num_add = 50;
+  int num_add = 0;
   
   const int n = num_add+1;
   int k = 0;  
@@ -111,8 +128,7 @@ inline void add_points(const rapidjson::Value& arr,Relief& relief, const double*
   x[k] = tmp_x[arr.Size()-1];
   y[k] = tmp_y[arr.Size()-1];
   alt[k] = tmp_alt[arr.Size()-1];
-  
-  //double ALT=0;
+
   for(rapidjson::SizeType  i = 0; i < (arr.Size()-1)*(n-1)+arr.Size(); i++) {
     relief.coords.push_back(x[i]);
     relief.coords.push_back(y[i]);
@@ -120,15 +136,31 @@ inline void add_points(const rapidjson::Value& arr,Relief& relief, const double*
   }
 }
 
-inline bool feature_get_altitude_property(const rapidjson::Value& feature,std::string const& prop,double& out_val) {
-  if(prop.empty() || !feature.HasMember("properties")) {
-    return false;
+inline void get_edges(const rapidjson::Value& arr,Relief& relief) {
+  CustomEdge edge;
+  
+  if(arr.Size() == 1){
+    get_edges(arr[0],relief);
+    return;
   }
-  const rapidjson::Value& props = feature["properties"];
-  if(props.HasMember(prop.c_str())) {
-    return get_double(props[prop.c_str()],out_val);
+  
+  double tmp_x[arr.Size()], tmp_y[arr.Size()];
+  for(int i = 0; i < arr.Size()/*-1*/; i++ /*i+=2*/) {
+    get_double(arr[i][0],tmp_x[i]);
+    get_double(arr[i][1],tmp_y[i]);
+    //get_double(arr[i+1][0],tmp_x[i+1]);
+    //get_double(arr[i+1][1],tmp_y[i+1]);
+    
+    edge.vertices.first = tmp_x[i];
+    edge.vertices.second = tmp_y[i];
+    //edge.vertices.first[0] = tmp_x[i];
+    //edge.vertices.first[1] = tmp_y[i];
+    //edge.vertices.second[0] = tmp_x[i+1];
+    //edge.vertices.second[1] = tmp_y[i+1];
+    relief.edges.push_back(edge);
   }
-  return false;
+  
+
 }
 
 inline Relief get_geo_json_points(std::string const& json, std::string const& prop) {
@@ -147,7 +179,9 @@ inline Relief get_geo_json_points(std::string const& json, std::string const& pr
         if( feature["geometry"] ["type"] == "Polygon" || feature["geometry"] ["type"] == "LineString") {
 		const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
 		if( has_prop || prop.empty() ) {
-		  add_points(coordinates,relief,has_prop ? &prop_value : NULL);
+		  //add_points(coordinates,relief,has_prop ? &prop_value : NULL);
+		  get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+		  get_edges(coordinates,relief);
 		}          
         } else {
         	//MultiPoint && Point
