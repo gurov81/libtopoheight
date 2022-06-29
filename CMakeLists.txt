@@ -9,9 +9,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}")
 
 include_directories(SYSTEM
   third_party
-  third_party/delaunator-cpp/include
+  #third_party/delaunator-cpp/include
   third_party/rtree.c
-  third_party/CDT/include
+  #third_party/CDT/include
+  third_party/DelaunayTriangulator/source
 )
 add_library(topoheight SHARED
   source/libtopoheight.cpp
