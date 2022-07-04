@@ -6,13 +6,13 @@
 #include "rectangle.hpp"
 #include "triangle.hpp"
 #include "heightmap.hpp"
-#include "ctl.h"
+#include "CDT.h"
 
 struct context {
   utils::Relief relief;
-  ctl::DelaunayTriangulation* dt;
+  CDT::Triangulation<double>* cdt;
   struct rtree *rtree;
-  context() : dt(NULL),rtree(NULL) {};
+  context() : cdt(NULL),rtree(NULL) {};
 };
 
 #ifdef __cplusplus
@@ -26,7 +26,7 @@ struct context* libtopoheight_create() {
 }
 
 void libtopoheight_destroy( struct context* ctx ) {
-  if(ctx->dt) delete ctx->dt;
+  if(ctx->cdt) delete ctx->cdt;
   if(ctx->rtree) rtree_free(ctx->rtree);
   delete ctx;
 }
@@ -67,57 +67,51 @@ int libtopoheight_load_buffer(struct context* ctx, const char* buf, size_t size,
    если указан параметр alts, возвращает высоты в вершинах треугольника
 */
 static void get_triangle(struct context* ctx, int i, double points[6], double alts[3]) {
-  //CDT::TriangleVec& triangles = ctx->cdt->triangles;
-  ctl::TIN tin(ctx->dt);
+  CDT::TriangleVec& triangles = ctx->cdt->triangles;
   if(points) {  
-    points[0] = tin.verts[tin.triangles[i + 0]].x;	
-    points[1] = tin.verts[tin.triangles[i + 0]].y;		
-    points[2] = tin.verts[tin.triangles[i + 1]].x;	
-    points[3] = tin.verts[tin.triangles[i + 1]].y;	
-    points[4] = tin.verts[tin.triangles[i + 2]].x;	
-    points[5] = tin.verts[tin.triangles[i + 2]].y;
+    points[0] = ctx->relief.points[triangles[i].vertices[0]].x;	
+    points[1] = ctx->relief.points[triangles[i].vertices[0]].y;		
+    points[2] = ctx->relief.points[triangles[i].vertices[1]].x;	
+    points[3] = ctx->relief.points[triangles[i].vertices[1]].y;	
+    points[4] = ctx->relief.points[triangles[i].vertices[2]].x;	
+    points[5] = ctx->relief.points[triangles[i].vertices[2]].y;
   }
   if(alts) {
-    alts[0] = tin.verts[tin.triangles[i + 0]].z;
-    alts[1] = tin.verts[tin.triangles[i + 1]].z;
-    alts[2] = tin.verts[tin.triangles[i + 2]].z;
+    alts[0] = ctx->relief.points[triangles[i].vertices[0]].z;
+    alts[1] = ctx->relief.points[triangles[i].vertices[1]].z;
+    alts[2] = ctx->relief.points[triangles[i].vertices[2]].z;
   }
 }
 
 //#define log printf
 #define log(...)
 
-int libtopoheight_triangulate(struct context* ctx) {
-  if( !ctx->relief.points.size() && !ctx->relief.lineStrings.size() && !ctx->relief.polygons.size() )
-    return 1;
-  if( ctx->dt ) delete ctx->dt;
-  ctx->dt = NULL;
-  //выполнение триангуляции
-  try {
-    double minX = -100;
-    double minY = -100;
-    double maxX = 100;
-    double maxY = 100;
-    ctl::PointList boundary;
-    boundary.push_back(ctl::Point(minX, minY));
-    boundary.push_back(ctl::Point(maxX, minY));
-    boundary.push_back(ctl::Point(maxX, maxY));
-    boundary.push_back(ctl::Point(minX, maxY));
+struct CustomPoint2D
+{
+    double data[2];
+};
 
-    ctl::DelaunayTriangulation *dt = new ctl::DelaunayTriangulation(boundary);
-    ctx->dt = new ctl::DelaunayTriangulation(boundary);
-   
-    for (int i; i < ctx->relief.points.size(); i++){
-      ctx->dt->InsertConstrainedPoint(ctx->relief.points[i]);
-    }
-    for (int i; i < ctx->relief.lineStrings.size(); i++){
-      ctx->dt->InsertConstrainedLineString(ctx->relief.lineStrings[i]);
-    }
-    for (int i; i < ctx->relief.polygons.size(); i++){
-      ctx->dt->InsertConstrainedPolygon(ctx->relief.polygons[i]);
-    }
+int libtopoheight_triangulate(struct context* ctx) {
+  if( !ctx->relief.points.size() )
+    return 1;
+  if( ctx->cdt ) delete ctx->cdt;
+  ctx->cdt = NULL;
+  //выполнение триангуляции
+  try {    
+    CDT::RemoveDuplicatesAndRemapEdges(ctx->relief.points,ctx->relief.edges);
+    //CDT::RemoveDuplicates(tmp_points);
+    //CDT::RemapEdges(tmp_edge,CDT::RemoveDuplicates(tmp_points));
     
+    //CDT::VertexInsertionOrder::AsProvided;
     
+    ctx->cdt = new CDT::Triangulation<double>;   
+    ctx->cdt->insertVertices(ctx->relief.points);
+     
+    ctx->cdt->insertEdges(ctx->relief.edges);
+    
+    ctx->cdt->eraseSuperTriangle();
+    //ctx->cdt->eraseOuterTriangles();
+    //ctx->cdt->eraseOuterTrianglesAndHoles();
   }
   catch(std::runtime_error& err) {
     std::cout << err.what() << std::endl;
@@ -127,22 +121,12 @@ int libtopoheight_triangulate(struct context* ctx) {
   double points[6];
   double rect[4]; //lon,lat,lon,lat
   double alts[3];
-  const ctl::TIN tin(ctx->dt);
-  for(size_t i=0; i<tin.triangles.size(); i++) {
+  const CDT::TriangleVec& triangles = ctx->cdt->triangles;
+  for(size_t i=0; i<triangles.size(); i++) {
     //получение координат и высот в вершинах треугольника
     get_triangle(ctx, i, points, alts);
 
 #if 0
-    std::cout << "\n" << ctx->cdt->vertices[triangles[i].vertices[0]].x;	
-    std::cout << "\n" << triangles[i].vertices[0];	
-    std::cout << "\n" << triangles[i].vertices[1];
-    std::cout << "\n" << triangles[i].vertices[2];
-    
- printf("\nTRIANGLE %d: (%3.3f,%3.3f) (%3.3f,%3.3f) (%3.3f,%3.3f) => (%3.3f,%3.3f,%3.3f)",
-      i,points[0],points[1],points[2],points[3],points[4],points[5],
-      alts[0],alts[1],alts[2]
-    );
-    
     log("TRIANGLE %d: (%3.3f,%3.3f) (%3.3f,%3.3f) (%3.3f,%3.3f) => (%3.3f,%3.3f,%3.3f)\n",
       i,points[0],points[1],points[2],points[3],points[4],points[5],
       alts[0],alts[1],alts[2]
@@ -152,9 +136,9 @@ int libtopoheight_triangulate(struct context* ctx) {
     get_bounding_rect(points,rect);
     //вставка прямоугольника в R-дерево с сохранением индекса связанного с ним треугольника
     bool rc = rtree_insert(ctx->rtree,rect,&i);
-    if(!rc) {
-      return(3);
-    }
+    //if(!rc) {
+    //  return(3);
+    //}
   }
   return 0;
 }
@@ -275,25 +259,18 @@ int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int wi
 }
 
 void libtopoheight_debug_get_counts(struct context* ctx,size_t counts[3]) {
-  /*counts[0] = ctx->relief.coords.size();
-  counts[1] = ctx->relief.altitudes.size();
-  ctl::TIN tin(ctx->dt);
-  counts[2] = ctx->dt ? tin.triangles.size()*3 : 0;*/
-  counts[0] = 0;
-  counts[1] = 0;
-  counts[2] = 0; 
+  counts[0] = ctx->relief.points.size()*2;
+  counts[1] = ctx->relief.points.size();
+  counts[2] = ctx->cdt ? ctx->cdt->triangles.size()*3 : 0;
 }
 
 void libtopoheight_debug_get_coords(struct context* ctx,size_t index, double coord[2]) {
-  /*coord[0] = ctx->relief.coords[2*index];
-  coord[1] = ctx->relief.coords[2*index+1];*/
-  coord[0] = 0;
-  coord[1] = 0;
+  coord[0] = ctx->relief.points[index].x;
+  coord[1] = ctx->relief.points[index].y;
 }
 
 void libtopoheight_debug_get_altitude(struct context* ctx,size_t index, double altitude[1]) {
-  altitude[0] = 0;
-  //altitude[0] = ctx->relief.altitudes[index];
+  altitude[0] = ctx->relief.points[index].z;
 }
 
 

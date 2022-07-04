@@ -5,14 +5,13 @@
 #include <string>
 #include <vector>
 #include "rapidjson/document.h"
-#include "ctl.h"
+#include "CDT.h"
 
 namespace utils {
 
 struct Relief {
-  ctl::PointList points;
-  std::vector<ctl::PointList> lineStrings;
-  std::vector<ctl::PointList> polygons;
+  std::vector<CDT::V2d<double>> points;
+  std::vector<CDT::Edge> edges;
 };
 
 inline std::string read_file(const char* filename) {
@@ -52,71 +51,49 @@ inline bool feature_get_altitude_property(const rapidjson::Value& feature,std::s
   return false;
 }
 
-inline void get_point(const rapidjson::Value& arr,Relief& relief, const double* prop_value ) {
+inline void get_coords(const rapidjson::Value& arr,Relief& relief, const double* prop_value ) {
   if(!arr.IsArray()) return;
-  double x=0.0, y=0.0, z=0.0;
-  if( get_double(arr[0],x) && get_double(arr[1],y) ) {
+  double x=0.0, y=0.0;
+  if( get_double(arr[0],x) && get_double(arr[1],y) ) {       
+    CDT::V2d<double> tmp_point;
+    tmp_point.x = x;
+    tmp_point.y = y;
     if( prop_value ) {
-      relief.points.push_back(ctl::Point(x,y,*prop_value)); 
+      tmp_point.z = *prop_value;
+      relief.points.push_back(tmp_point);
       return;
     }
-    get_double(arr[2],z);
-    relief.points.push_back(ctl::Point(x,y,z));    
-    return;
+    double alt=0;
+    if( arr.Size()==3 && get_double(arr[2],alt) ) {
+      tmp_point.z = alt;
+      relief.points.push_back(tmp_point);
+      return;
+    }
+    throw std::runtime_error("No altitude data");
   }  
   if(arr[0].IsArray()) {
     for(rapidjson::SizeType i = 0; i < arr.Size(); i++) {
-      get_point(arr[i],relief,prop_value);
+      get_coords(arr[i],relief,prop_value);
     }
   }
 }
 
-inline void get_lineString(const rapidjson::Value& arr,Relief& relief, const double* prop_value ) {
-  if(!arr.IsArray()) return; 
+inline void get_edges(const rapidjson::Value& arr,Relief& relief) { 
   if(arr.Size() == 1){
-    get_lineString(arr[0],relief,prop_value);
+    get_edges(arr[0],relief);
     return;
   }
   
-  ctl::PointList lineString;
-  double x=0.0, y=0.0, z=0.0;
-  for(int i = 0; i < arr.Size(); i++) {
-    get_double(arr[i][0],x);
-    get_double(arr[i][1],y);
-    if( prop_value ) {
-      lineString.push_back(ctl::Point(x,y,*prop_value));
-    } else {
-      get_double(arr[i][2],z);
-      lineString.push_back(ctl::Point(x,y,z));
-    }
-  }
+  CDT::VertInd v1 = 0, v2 = 0;
   
-  relief.lineStrings.push_back(lineString);
-  return;
-}
+  int tmp = relief.points.size() - arr.Size();
+  
+  for(int i = 0; i < arr.Size() -1 /*-1*/; i++ /*i+=2*/) {
+    v1 = tmp + i;
+    v2 = tmp + i + 1;    
 
-inline void get_polygon(const rapidjson::Value& arr,Relief& relief, const double* prop_value ) {
-  if(!arr.IsArray()) return; 
-  if(arr.Size() == 1){
-    get_polygon(arr[0],relief,prop_value);
-    return;
+    relief.edges.push_back(CDT::Edge(v1, v2));
   }
-  
-  ctl::PointList polygon;
-  double x=0.0, y=0.0, z=0.0;
-  for(int i = 0; i < arr.Size(); i++) {
-    get_double(arr[i][0],x);
-    get_double(arr[i][1],y);
-    if( prop_value ) {
-      polygon.push_back(ctl::Point(x,y,*prop_value));
-    } else {
-      get_double(arr[i][2],z);
-      polygon.push_back(ctl::Point(x,y,z));
-    }
-  }
-    
-  relief.polygons.push_back(polygon);
-  return;
 }
 
 inline Relief get_geo_json_points(std::string const& json, std::string const& prop) {
@@ -131,22 +108,19 @@ inline Relief get_geo_json_points(std::string const& json, std::string const& pr
         const rapidjson::Value& feature = features[i];
 	double prop_value = 0;
 	const bool has_prop = feature_get_altitude_property(feature,prop,prop_value);
-	const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
-        if( feature["geometry"] ["type"] == "Polygon"){
-          if( has_prop || prop.empty() ) {
-	  //add_points(coordinates,relief,has_prop ? &prop_value : NULL);
-	  get_polygon(coordinates,relief,has_prop ? &prop_value : NULL);
-	  }          
-        } else if( feature["geometry"] ["type"] == "LineString") {
-          if( has_prop || prop.empty()){
-	  //add_points(coordinates,relief,has_prop ? &prop_value : NULL);
-	  get_lineString(coordinates,relief,has_prop ? &prop_value : NULL);
-	  }
+	
+        if( feature["geometry"] ["type"] == "Polygon" || feature["geometry"] ["type"] == "LineString") {
+		const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
+		if( has_prop || prop.empty() ) {
+		  get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+		  get_edges(coordinates,relief);
+		}          
         } else {
-          //MultiPoint && Point
-	  if( has_prop || prop.empty() ) {
-	    get_point(coordinates,relief,has_prop ? &prop_value : NULL);
-	  }
+        	//MultiPoint && Point
+		const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
+		if( has_prop || prop.empty() ) {
+		  get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+		}
         } 
     }
     return relief;
