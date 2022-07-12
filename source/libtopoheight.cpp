@@ -99,8 +99,8 @@ int libtopoheight_triangulate(struct context* ctx) {
   //выполнение триангуляции
   try {    
     CDT::RemoveDuplicatesAndRemapEdges(ctx->relief.points,ctx->relief.edges);
-    //CDT::RemoveDuplicates(tmp_points);
-    //CDT::RemapEdges(tmp_edge,CDT::RemoveDuplicates(tmp_points));
+    //CDT::RemoveDuplicates(ctx->relief.points);
+    //CDT::RemapEdges(tmp_edge,CDT::RemoveDuplicates(ctx->relief.edges));
     
     //CDT::VertexInsertionOrder::AsProvided;
     
@@ -125,7 +125,6 @@ int libtopoheight_triangulate(struct context* ctx) {
   for(size_t i=0; i<triangles.size(); i++) {
     //получение координат и высот в вершинах треугольника
     get_triangle(ctx, i, points, alts);
-
 #if 0
     log("TRIANGLE %d: (%3.3f,%3.3f) (%3.3f,%3.3f) (%3.3f,%3.3f) => (%3.3f,%3.3f,%3.3f)\n",
       i,points[0],points[1],points[2],points[3],points[4],points[5],
@@ -177,7 +176,7 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
   ud->index = index;
   ud->alt = -1;
   //расчет высоты в заданной точке по информации о треугольнике
-  const double EPS = 0.0001;
+  const double EPS = 0.0000001;
   //в вершинах треугольника возвращаем высоту вершины
   if(      dist(pt,t1) < EPS ) {ud->alt=alt[0]; log("ALT=alt1 => %3.3f\n",ud->alt);}
   else if( dist(pt,t2) < EPS ) {ud->alt=alt[1]; log("ALT=alt2 => %3.3f\n",ud->alt);}
@@ -247,8 +246,8 @@ int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int wi
       //заполнение цвета пикселя
       int i = x+y*width;
       data[i] = 0;
-      if(rc==0) {
-        data[i] = cb ? cb(alt) : get_altitude_color(alt);
+      if(rc==0) {        
+        data[i] = cb ? cb(alt) : get_altitude_color(alt,ctx->relief.maxAlt);
       }
       //printf("HEIGHTMAP: %d,%d rc=%d alt=%3.3f\n",x,y,rc,alt);
     }

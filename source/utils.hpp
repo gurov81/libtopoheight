@@ -10,6 +10,7 @@
 namespace utils {
 
 struct Relief {
+  double maxAlt = 0;
   std::vector<CDT::V2d<double>> points;
   std::vector<CDT::Edge> edges;
 };
@@ -54,18 +55,25 @@ inline bool feature_get_altitude_property(const rapidjson::Value& feature,std::s
 inline void get_coords(const rapidjson::Value& arr,Relief& relief, const double* prop_value ) {
   if(!arr.IsArray()) return;
   double x=0.0, y=0.0;
-  if( get_double(arr[0],x) && get_double(arr[1],y) ) {       
+  if( get_double(arr[0],x) && get_double(arr[1],y) ) {      
+    //std::cout << "\n" << x << " " << y;
     CDT::V2d<double> tmp_point;
     tmp_point.x = x;
     tmp_point.y = y;
     if( prop_value ) {
       tmp_point.z = *prop_value;
+      if (relief.maxAlt < tmp_point.z){
+        relief.maxAlt = tmp_point.z;
+      }
       relief.points.push_back(tmp_point);
       return;
     }
     double alt=0;
     if( arr.Size()==3 && get_double(arr[2],alt) ) {
       tmp_point.z = alt;
+      if (relief.maxAlt < tmp_point.z){
+        relief.maxAlt = tmp_point.z;
+      }
       relief.points.push_back(tmp_point);
       return;
     }
@@ -108,19 +116,18 @@ inline Relief get_geo_json_points(std::string const& json, std::string const& pr
         const rapidjson::Value& feature = features[i];
 	double prop_value = 0;
 	const bool has_prop = feature_get_altitude_property(feature,prop,prop_value);
+	const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
 	
         if( feature["geometry"] ["type"] == "Polygon" || feature["geometry"] ["type"] == "LineString") {
-		const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
-		if( has_prop || prop.empty() ) {
-		  get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
-		  get_edges(coordinates,relief);
-		}          
+	  if( has_prop || prop.empty() ) {
+	    get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+	    get_edges(coordinates,relief);
+	  }          
         } else {
-        	//MultiPoint && Point
-		const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
-		if( has_prop || prop.empty() ) {
-		  get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
-		}
+          //MultiPoint && Point
+	  if( has_prop || prop.empty() ) {
+	    get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+	  }
         } 
     }
     return relief;

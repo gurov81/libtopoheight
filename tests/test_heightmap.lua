@@ -28,17 +28,25 @@ function TestHeightmap:testRead_LAYER6()
   obj:destroy()
 end
 
+function TestHeightmap:testMap_LAYER6()
+  local obj = libtopoheight.new()
+  local x,y,x2,y2 = 40,43,40.5,43.333
+  local rc = obj:load_file("examples/LAYER6.geojson","SC_7")
+  local rc = obj:triangulate()  
+  local rc = obj:get_heightmap({x,y,x2,y2},2500,2500,"LAYER6.png")
+  obj:destroy()
+end
+
 function TestHeightmap:testPolygon_WithColorCallback()
   local obj = libtopoheight.new()
   assertNotIsNil(obj)
 
   --[[local src_data = {
     Polygon { {0,0,400}, {10,0,400}, {10,10,400}, {0,10,400} },
-    LineString({ {2, 2, 0}, {8, 8, 0} }),
-    MultiPoint({ {4, 6, 300} }),
-    MultiPoint({ {6, 4, 300} }),
-  }
-  local rc = obj:load_buffer(Layer(src_data))--]]
+    LineString({ {4, 4, 0}, {6, 4, 0} }),
+    MultiPoint({ {5, 8, 300} })
+  }--]]
+  --local rc = obj:load_buffer(Layer(src_data))
 
   local rc = obj:load_buffer( Layer {
     Polygon { {0,0,100}, {10,0,200}, {10,10,300}, {0,10,400} }
@@ -70,8 +78,8 @@ function TestHeightmap:testPolygon_WithColorCallback()
     return 0
   end
 
-  local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png",get_altitude_color)
-  --assertEquals(rc,0)
+  local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png"--[[,get_altitude_color_v2--]])
+  assertEquals(rc,0)
 
   local str = helpers.dump_altitude_matrix(obj,{0,10,1},{0,10,1})
   --print("\n",str)
