@@ -29,10 +29,10 @@ inline unsigned int get_altitude_color(double alt, double maxAlt) {
   //r = (int)(((double)alt/(256*5))*0xff) & 0xff;
   
   if (alt < (maxAlt/3)){
-    r = (int)(((double)alt/maxAlt)*255);
+    r = (int)(((double)alt*3/maxAlt)*255);
   }
   if (alt >= (maxAlt/3) && alt < (2*maxAlt/3)){
-    g = (int)(((double)alt/maxAlt)*255);
+    g = (int)(((double)alt*3/(maxAlt*2))*255);
   }
   if (alt >= (2*maxAlt/3)){
     b = (int)(((double)alt/maxAlt)*255);
