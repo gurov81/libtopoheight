@@ -199,11 +199,30 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
 #if 1
     //тупой вериант, учитывающий удаление заданной точки от каждой вершины
     // https://codeplea.com/triangular-interpolation
-    const double w1 = 1./dist(pt,t1);
+    /*const double w1 = 1./dist(pt,t1);
     const double w2 = 1./dist(pt,t2);
     const double w3 = 1./dist(pt,t3);
     const double a = (w1*alt[0]+w2*alt[1]+w3*alt[2])/(w1+w2+w3);
+    ud->alt = a;*/
+        
+   //https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
+
+    fPoint v0(t2.x - t1.x,t2.y - t1.y);
+    fPoint v1(t3.x - t1.x,t3.y - t1.y);
+    fPoint v2(pt.x - t1.x,pt.y - t1.y);
+
+    float d00 = v0.x*v0.x+v0.y*v0.y;
+    float d01 = v0.x*v1.x+v0.y*v1.y;
+    float d11 = v1.x*v1.x+v1.y*v1.y;
+    float d20 = v2.x*v0.x+v2.y*v0.y;
+    float d21 = v2.x*v1.x+v2.y*v1.y;
+    float denom = d00 * d11 - d01 * d01;
+    double w1 = (d11 * d20 - d01 * d21) / denom;
+    double w2 = (d00 * d21 - d01 * d20) / denom;
+    double w0 = 1.0f - w1 - w2;
+    const double a = (w0*alt[0]+w1*alt[1]+w2*alt[2])/(w0+w1+w2);
     ud->alt = a;
+        
 #endif
   }
   return false;

@@ -28,7 +28,7 @@ inline unsigned int get_altitude_color(double alt, double maxAlt) {
 #if 1
   //r = (int)(((double)alt/(256*5))*0xff) & 0xff;
   
-  /*if (alt < (maxAlt/3)){
+  if (alt < (maxAlt/3)){
     r = (int)(((double)alt/maxAlt)*255);
   }
   if (alt >= (maxAlt/3) && alt < (2*maxAlt/3)){
@@ -36,11 +36,11 @@ inline unsigned int get_altitude_color(double alt, double maxAlt) {
   }
   if (alt >= (2*maxAlt/3)){
     b = (int)(((double)alt/maxAlt)*255);
-  }*/
+  }
   
-  r = (int)(((double)alt/maxAlt)*255);
+  /*r = (int)(((double)alt/maxAlt)*255);
   g = (int)(((double)alt/maxAlt)*255);
-  b = (int)(((double)alt/maxAlt)*255);
+  b = (int)(((double)alt/maxAlt)*255);*/
 #endif
 
   /*	
