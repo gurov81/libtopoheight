@@ -165,38 +165,40 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
   fPoint t3(points[4],points[5]);
   double dd[3]; //v1-v2,v2-v3,v1-v3
   bool rc = PointInTriangle(pt,t1,t2,t3,dd);
-  if(rc){
+  /*if(rc){
     log("search... index=%d pt=(%3.3f,%3.3f) in_triangle:(%3.3f,%3.3f),(%3.3f,%3.3f),(%3.3f,%3.3f)=%d alts=%3.3f,%3.3f,%3.3f\n",
       *index,pt.x,pt.y,t1.x,t1.y,t2.x,t2.y,t3.x,t3.y,rc,
       alt[0],alt[1],alt[2]
     );
-  }
+  }*/
   if(!rc) return true;
   //треугольник найден
   ud->index = index;
   ud->alt = -1;
   //расчет высоты в заданной точке по информации о треугольнике
-  const double EPS = 0.0000001;
+  //const double EPS = 0.0000001;
   //в вершинах треугольника возвращаем высоту вершины
+  /*
   if(      dist(pt,t1) < EPS ) {ud->alt=alt[0]; log("ALT=alt1 => %3.3f\n",ud->alt);}
   else if( dist(pt,t2) < EPS ) {ud->alt=alt[1]; log("ALT=alt2 => %3.3f\n",ud->alt);}
   else if( dist(pt,t3) < EPS ) {ud->alt=alt[2]; log("ALT=alt3 => %3.3f\n",ud->alt);}
-#if 1
+#if 0
   //на сторонах треугольника возвращаем максимум из высот соответствующих вершин
   //см https://stackoverflow.com/questions/39908607/how-to-determine-if-a-point-is-in-the-edge-boundaries-of-a-2d-triangle
-  else if( std::abs(dd[0]) < EPS ) {ud->alt=std::max(alt[0],alt[1]); log("ALT=alt12 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[0],alt[1]);}
+  if( std::abs(dd[0]) < EPS ) {ud->alt=std::max(alt[0],alt[1]); log("ALT=alt12 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[0],alt[1]);}
   else if( std::abs(dd[1]) < EPS ) {ud->alt=std::max(alt[1],alt[2]); log("ALT=alt23 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[1],alt[2]);}
   else if( std::abs(dd[2]) < EPS ) {ud->alt=std::max(alt[0],alt[2]); log("ALT=alt13 => %3.3f (%3.3f,%3.3f)\n",ud->alt,alt[0],alt[2]);}
 #endif
-  else
-  {
+ else
+ {
+ */
     //точка внутри треугольника
 #if 0
     //максимум из высот трех вершин
     ud->alt = std::max( alt[0],alt[1] );
     ud->alt = std::max( ud->alt, alt[3] );
 #endif
-#if 1
+#if 0
     //тупой вериант, учитывающий удаление заданной точки от каждой вершины
     // https://codeplea.com/triangular-interpolation
     /*const double w1 = 1./dist(pt,t1);
@@ -204,7 +206,10 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
     const double w3 = 1./dist(pt,t3);
     const double a = (w1*alt[0]+w2*alt[1]+w3*alt[2])/(w1+w2+w3);
     ud->alt = a;*/
-        
+#endif
+
+#if 1        
+
    //https://gamedev.stackexchange.com/questions/23743/whats-the-most-efficient-way-to-find-barycentric-coordinates
 
     fPoint v0(t2.x - t1.x,t2.y - t1.y);
@@ -215,7 +220,7 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
     float d01 = v0.x*v1.x+v0.y*v1.y;
     float d11 = v1.x*v1.x+v1.y*v1.y;
     float d20 = v2.x*v0.x+v2.y*v0.y;
-    float d21 = v2.x*v1.x+v2.y*v1.y;
+    float d21 = v2.x*v1.x+v2.y*v1.y;   
     float denom = d00 * d11 - d01 * d01;
     double w1 = (d11 * d20 - d01 * d21) / denom;
     double w2 = (d00 * d21 - d01 * d20) / denom;
@@ -224,7 +229,7 @@ static bool search_iter(const double *rect, const void *item, void /*struct user
     ud->alt = a;
         
 #endif
-  }
+  //}
   return false;
 }
 

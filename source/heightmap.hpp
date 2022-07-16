@@ -25,9 +25,15 @@ inline unsigned int get_altitude_color(double alt, double maxAlt) {
   else r = 0xff*(alt/1000.0);
 #endif
 
+//r = (int)(((double)alt/(256*5))*0xff) & 0xff;
+
+// 16 бит вариант
 #if 1
-  //r = (int)(((double)alt/(256*5))*0xff) & 0xff;
-  
+  return (int)(((double)alt/maxAlt)*65536);
+#endif
+
+// 24бит вариант
+#if 0
   if (alt < (maxAlt/3)){
     r = (int)(((double)alt*3/maxAlt)*255);
   }
@@ -38,11 +44,6 @@ inline unsigned int get_altitude_color(double alt, double maxAlt) {
     b = (int)(((double)alt/maxAlt)*255);
   }
   
-  /*r = (int)(((double)alt/maxAlt)*255);
-  g = (int)(((double)alt/maxAlt)*255);
-  b = (int)(((double)alt/maxAlt)*255);*/
-#endif
-
   /*	
   const unsigned long blue_mask  = 0x000000ff;
   const unsigned long green_mask = 0x0000ff00;
@@ -50,6 +51,7 @@ inline unsigned int get_altitude_color(double alt, double maxAlt) {
   */
   unsigned int pixel = b | (g<<8) | (r<<16); //0xAARRGGBB
   return pixel;
+#endif
 }
 
 #endif //__HEIGHTMAP_HPP__

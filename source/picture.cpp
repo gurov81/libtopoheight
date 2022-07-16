@@ -12,6 +12,9 @@
 
 #include <png.h>
 
+// 16 || 24
+#define bit_depth 16
+//
 
 #define FFMIN(a,b) (((a)<(b))?(a):(b))
 #define FFMAX(a,b) (((a)>(b))?(a):(b))
@@ -119,32 +122,33 @@ extern "C" void picture_write_png(picture_t* self,unsigned int* data,const char*
     png_set_write_fn(png_ptr, self->png.ctx, png_write_context::callback, NULL);
   }
 
-  // Write header (8 bit colour depth)
-  png_set_IHDR (png_ptr, png_info_ptr, width, height,
-     8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
-     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+  // Write header
+  if (bit_depth == 24){
+    png_set_IHDR (png_ptr, png_info_ptr, width, height,
+      8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
+      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+      
+      // Set title
+    char text[] = "Screenshot";
+    char key[] = "Title";
+    png_text title_text;
+    title_text.compression = PNG_TEXT_COMPRESSION_NONE;
+    title_text.key = key;
+    title_text.text = text;
+    png_set_text (png_ptr, png_info_ptr, &title_text, 1);
 
-  // Set title
-  char text[] = "Screenshot";
-  char key[] = "Title";
-  png_text title_text;
-  title_text.compression = PNG_TEXT_COMPRESSION_NONE;
-  title_text.key = key;
-  title_text.text = text;
-  png_set_text (png_ptr, png_info_ptr, &title_text, 1);
+    png_write_info (png_ptr, png_info_ptr);
 
-  png_write_info (png_ptr, png_info_ptr);
+    // Allocate memory for one row (3 bytes per pixel - RGB)
+    png_row = self->png.row;
 
-  // Allocate memory for one row (3 bytes per pixel - RGB)
-  png_row = self->png.row;
-
-  const unsigned long blue_mask  = 0x000000ff;
-  const unsigned long green_mask = 0x0000ff00;
-  const unsigned long red_mask   = 0x00ff0000;
-  // Write image data
-  int x, y;
-  for (y = 0; y < height; y++){
-    for (x = 0; x < width; x++){
+    const unsigned long blue_mask  = 0x000000ff;
+    const unsigned long green_mask = 0x0000ff00;
+    const unsigned long red_mask   = 0x00ff0000;
+    // Write image data
+    int x, y;
+    for (y = 0; y < height; y++){
+      for (x = 0; x < width; x++){
         unsigned long pixel = data[y*width+x];//XGetPixel (image, x, y);
         unsigned char blue = pixel & blue_mask;
         unsigned char green = (pixel & green_mask) >> 8; 
@@ -152,14 +156,41 @@ extern "C" void picture_write_png(picture_t* self,unsigned int* data,const char*
         png_byte *ptr = &(png_row[x*3]);
         ptr[0] = red;
         ptr[1] = green;
-        ptr[2] = blue;
+        ptr[2] = blue;       
+      }      
+      png_write_row (png_ptr, png_row);
     }
-    png_write_row (png_ptr, png_row);
+
+    // End write
+    png_write_end (png_ptr, NULL);
+  
+    } else if (bit_depth == 16){
+    
+    png_set_IHDR (png_ptr, png_info_ptr, width, height,
+      bit_depth, PNG_COLOR_TYPE_GRAY, PNG_INTERLACE_NONE,
+      PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+    png_write_info (png_ptr, png_info_ptr);
+
+    png_row = self->png.row;
+    
+    // Write image data
+    int x, y;
+    for (y = 0; y < height; y++){
+      for (x = 0; x < width; x++){
+        unsigned long pixel = data[y*width+x];
+        unsigned char c2 = pixel;
+        unsigned char c1 = pixel >> 8; 
+        png_byte *ptr = &(png_row[x*2]);
+        ptr[0] = c1;
+        ptr[1] = c2;         
+      }
+      png_write_row (png_ptr, png_row);
+    }
+    // End write
+    png_write_end (png_ptr, NULL);
   }
-
-  // End write
-  png_write_end (png_ptr, NULL);
-
+  
   // Free
   if (png_info_ptr != NULL) png_free_data (png_ptr, png_info_ptr, PNG_FREE_ALL, -1);
   if (png_ptr != NULL) png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
