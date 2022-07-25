@@ -105,32 +105,31 @@ inline void get_edges(const rapidjson::Value& arr,Relief& relief) {
 }
 
 inline Relief get_geo_json_points(std::string const& json, std::string const& prop) {
-    rapidjson::Document document;
-    if(document.Parse(json.c_str()).HasParseError()) {
-        throw std::runtime_error("Cannot parse JSON");
+  rapidjson::Document document;
+  if(document.Parse(json.c_str()).HasParseError()) {
+    throw std::runtime_error("Cannot parse JSON");
+  }
+  const rapidjson::Value& features = document["features"];
+  Relief relief;
+  // vector<double> y_vector;
+  for(rapidjson::SizeType i = 0; i < features.Size(); i++) {
+    const rapidjson::Value& feature = features[i];
+    double prop_value = 0;
+    const bool has_prop = feature_get_altitude_property(feature,prop,prop_value);
+    const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
+    if( feature["geometry"] ["type"] == "Polygon" || feature["geometry"] ["type"] == "LineString") {
+      if( has_prop || prop.empty() ) {
+        get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+        get_edges(coordinates,relief);
+      }          
+    } else {
+    //MultiPoint && Point
+      if( has_prop || prop.empty() ) {
+        get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
+      }
     }
-    const rapidjson::Value& features = document["features"];
-    Relief relief;
-    // vector<double> y_vector;
-    for(rapidjson::SizeType i = 0; i < features.Size(); i++) {
-        const rapidjson::Value& feature = features[i];
-	double prop_value = 0;
-	const bool has_prop = feature_get_altitude_property(feature,prop,prop_value);
-	const rapidjson::Value& coordinates = feature["geometry"]["coordinates"];
-	
-        if( feature["geometry"] ["type"] == "Polygon" || feature["geometry"] ["type"] == "LineString") {
-	  if( has_prop || prop.empty() ) {
-	    get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
-	    get_edges(coordinates,relief);
-	  }          
-        } else {
-          //MultiPoint && Point
-	  if( has_prop || prop.empty() ) {
-	    get_coords(coordinates,relief,has_prop ? &prop_value : NULL);
-	  }
-        } 
-    }
-    return relief;
+  }
+  return relief;
 }
 
 } // end ns utils

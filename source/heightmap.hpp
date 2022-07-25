@@ -4,29 +4,6 @@
 inline unsigned int get_altitude_color(double alt, double maxAlt) {
   int r=0,g=0,b=0;
 
-#if 0
-  //https://github.com/Viglino/ol-ext/blob/master/src/util/imagesLoader.js#L279
-  int h = (int)(alt*1000 + 1200000);
-  r = (h >> 16) & 0xff;
-  g = ((h % 65536) >> 8) & 0xff;
-  b = h % 256;
-#endif
-
-#if 0
-  h = alt/200*65536;
-  r = (h >> 8) & 0xff;
-  g = h & 0xff;
-  b = 0;
-#endif
-
-#if 0
-  if(alt<0) r=0;
-  else if(alt>1000) r=0xff;
-  else r = 0xff*(alt/1000.0);
-#endif
-
-//r = (int)(((double)alt/(256*5))*0xff) & 0xff;
-
 // 16 бит вариант
 #if 1
   return (int)(((double)alt/maxAlt)*65536);

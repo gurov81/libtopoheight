@@ -98,20 +98,11 @@ int libtopoheight_triangulate(struct context* ctx) {
   ctx->cdt = NULL;
   //выполнение триангуляции
   try {    
-    CDT::RemoveDuplicatesAndRemapEdges(ctx->relief.points,ctx->relief.edges);
-    //CDT::RemoveDuplicates(ctx->relief.points);
-    //CDT::RemapEdges(tmp_edge,CDT::RemoveDuplicates(ctx->relief.edges));
-    
-    //CDT::VertexInsertionOrder::AsProvided;
-    
+    CDT::RemoveDuplicatesAndRemapEdges(ctx->relief.points,ctx->relief.edges);    
     ctx->cdt = new CDT::Triangulation<double>;   
-    ctx->cdt->insertVertices(ctx->relief.points);
-     
-    ctx->cdt->insertEdges(ctx->relief.edges);
-    
+    ctx->cdt->insertVertices(ctx->relief.points);    
+    ctx->cdt->insertEdges(ctx->relief.edges);    
     ctx->cdt->eraseSuperTriangle();
-    //ctx->cdt->eraseOuterTriangles();
-    //ctx->cdt->eraseOuterTrianglesAndHoles();
   }
   catch(std::runtime_error& err) {
     std::cout << err.what() << std::endl;
@@ -119,25 +110,16 @@ int libtopoheight_triangulate(struct context* ctx) {
   }
   //вставка в R-дерево
   double points[6];
-  double rect[4]; //lon,lat,lon,lat
+  double rect[4];
   double alts[3];
   const CDT::TriangleVec& triangles = ctx->cdt->triangles;
   for(size_t i=0; i<triangles.size(); i++) {
     //получение координат и высот в вершинах треугольника
     get_triangle(ctx, i, points, alts);
-#if 0
-    log("TRIANGLE %d: (%3.3f,%3.3f) (%3.3f,%3.3f) (%3.3f,%3.3f) => (%3.3f,%3.3f,%3.3f)\n",
-      i,points[0],points[1],points[2],points[3],points[4],points[5],
-      alts[0],alts[1],alts[2]
-    );
-#endif
     //расчет прямоугольника, содержащего треугольник
     get_bounding_rect(points,rect);
     //вставка прямоугольника в R-дерево с сохранением индекса связанного с ним треугольника
     bool rc = rtree_insert(ctx->rtree,rect,&i);
-    //if(!rc) {
-    //  return(3);
-    //}
   }
   return 0;
 }
@@ -189,11 +171,9 @@ int libtopoheight_get_alt(struct context* ctx,const double coord[2], double out_
   ud.point[0] = coord[0];
   ud.point[1] = coord[1];
   bool rc = rtree_search(ctx->rtree, rect, search_iter, &ud);
-
   if(ud.index >= 0) {
     out_alt[0] = ud.alt;
   }
-  //printf("search: rc=%d index=%d => %3.3f\n",rc,ud.index,ud.alt );
   return 0;
 }
 
@@ -220,7 +200,6 @@ int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int wi
       if(rc==0) {        
         data[i] = cb ? cb(alt) : get_altitude_color(alt,ctx->relief.maxAlt);
       }
-      //printf("HEIGHTMAP: %d,%d rc=%d alt=%3.3f\n",x,y,rc,alt);
     }
   }
   picture_write_png(pic,data,filename);
@@ -242,8 +221,6 @@ void libtopoheight_debug_get_coords(struct context* ctx,size_t index, double coo
 void libtopoheight_debug_get_altitude(struct context* ctx,size_t index, double altitude[1]) {
   altitude[0] = ctx->relief.points[index].z;
 }
-
-
 #ifdef __cplusplus
 }
 #endif

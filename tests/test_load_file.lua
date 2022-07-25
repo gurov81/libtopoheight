@@ -18,7 +18,6 @@ function TestLoadFile:testRead_LAYER6()
   assertEquals(rc,0)
 
   local _,_, triangles = obj:debug_get_counts()
-  --assertEquals(triangles / 3,coords)
   assertEquals(triangles % 3,0)
 
   obj:destroy()
@@ -40,7 +39,6 @@ function TestLoadFile:testRead_LAYER13()
   assertEquals(rc,0)
 
   local _,_, triangles = obj:debug_get_counts()
-  --assertEquals(triangles / 3,coords)
   assertEquals(triangles % 3,0)
 
   obj:destroy()

@@ -25,8 +25,6 @@ local function MultiPoint(args,properties)
 end
 
 local function dump_altitude_matrix(obj,X,Y)
-  --X = {Xmin,Xmax,delta_x}
-  --Y = {Ymin,Ymax,delta_y}
   local t = {}
   for y=Y[2],Y[1],-Y[3] do --выводим сверху-вниз
     local line = {}
