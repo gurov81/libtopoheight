@@ -27,12 +27,27 @@ function TestHeightmap:testRead_LAYER6()
   obj:destroy()
 end
 
+--[[
 function TestHeightmap:testMap_LAYER6()
   local obj = libtopoheight.new()
   local x,y,x2,y2 = 40,43,40.5,43.333
   local rc = obj:load_file("examples/LAYER6.geojson","SC_7")
   local rc = obj:triangulate()  
   local rc = obj:get_heightmap({x,y,x2,y2},2500,2500,"LAYER6.png")
+  obj:destroy()
+end
+]]
+
+function TestHeightmap:testMap_Merged()
+  local obj = libtopoheight.new()
+  assertNotIsNil(obj)
+  local rc = obj:load_file("examples/merged.geojson","SC_4")
+  assertEquals(rc,0)
+  local rc = obj:triangulate()
+  assertEquals(rc,0)
+  local rc = obj:get_heightmap({39.5, 43.333,
+                                40.5, 44.000}, 768, 768, "merged.png")
+  assertEquals(rc,0)
   obj:destroy()
 end
 
