@@ -28,6 +28,9 @@ int libtopoheight_get_alt(struct context* ctx,const double coord[2], double out_
 //генерация heightmap
 int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int width,int height,const char* filename,get_color_cb cb);
 
+//получение вертикального профиля
+int libtopoheight_get_vertical_profile(struct context* ctx, const double trajectory[],const int size,const int accuracy,const double deviation);
+
 //отладочные функции
 void libtopoheight_debug_get_counts(struct context* ctx,size_t counts[3]);
 void libtopoheight_debug_get_coords(struct context* ctx,size_t index, double coord[2]);

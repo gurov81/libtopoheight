@@ -17,6 +17,8 @@ int libtopoheight_triangulate(struct context* ctx);
 int libtopoheight_get_alt(struct context* ctx,const double coord[2], double out_alt[1]);
 int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int width,int height,const char* filename,get_color_cb);
 
+int libtopoheight_get_vertical_profile(struct context* ctx, const double trajectory[], const int size,const int accuracy, const double deviation);
+
 void libtopoheight_debug_get_counts(struct context* ctx,size_t counts[3]);
 void libtopoheight_debug_get_coords(struct context* ctx,size_t index, double coord[2]);
 void libtopoheight_debug_get_altitude(struct context* ctx,size_t index, double altitude[1]);
@@ -47,6 +49,23 @@ local mt = {
     local tmp = ffi.new("double[4]")
     tmp[0],tmp[1],tmp[2],tmp[3] = rect[1],rect[2],rect[3],rect[4]
     local rc = lib.libtopoheight_get_heightmap(self,tmp,width,height,path,get_color_cb)
+    return rc
+  end,
+  get_vertical_profile = function(self,trajectory,accuracy,deviation)
+    local size = #trajectory
+    local tmp_size = ffi.new("int")
+    tmp_size = size
+    local tmp = ffi.new("double[?]",size*2)
+    local k = 0
+    for i=1,size do
+      for j=1,2 do
+        tmp[k] = trajectory[i][j]
+        k = k + 1
+      end
+    end
+    if (accuracy == nil) then accuracy=100 end
+    if (deviation == nil) then deviation=1 end
+    local rc = lib.libtopoheight_get_vertical_profile(self, tmp, tmp_size, accuracy,deviation)
     return rc
   end,
   debug_get_counts = function(self)

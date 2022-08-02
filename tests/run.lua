@@ -10,10 +10,10 @@ _G.real_print = print
 
 require('luaunit')
 
-require 'test_load_buffer'
-require 'test_load_file'
-require 'test_height'
-require 'test_height_property'
+--require 'test_load_buffer'
+--require 'test_load_file'
+--require 'test_height'
+--require 'test_height_property'
 require 'test_heightmap'
 
 os.exit(LuaUnit.run())

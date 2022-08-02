@@ -27,6 +27,7 @@ function TestHeightmap:testRead_LAYER6()
   obj:destroy()
 end
 
+--[[
 function TestHeightmap:testMap_LAYER6()
   local obj = libtopoheight.new()
   local x,y,x2,y2 = 40,43,40.5,43.333
@@ -35,6 +36,7 @@ function TestHeightmap:testMap_LAYER6()
   local rc = obj:get_heightmap({x,y,x2,y2},2500,2500,"LAYER6.png")
   obj:destroy()
 end
+]]
 
 function TestHeightmap:testPolygon_WithColorCallback()
   local obj = libtopoheight.new()
@@ -55,8 +57,17 @@ function TestHeightmap:testPolygon_WithColorCallback()
   local _,_, triangles = obj:debug_get_counts()
   assertEquals(triangles,6)
 
-  local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png")
+  --local trajectory = {{0, 5},{10, 5}}
+  --local trajectory = {{0, 2},{5, 2},{5, 7},{10, 10}}
+  local trajectory = {{0, 0},{10, 0},{10, 10},{0, 10}}
+  local accuracy = 10
+  local deviation = 0.1
+  local rc = obj:get_vertical_profile(trajectory,accuracy,deviation)
+  --local rc = obj:get_vertical_profile(trajectory)
   assertEquals(rc,0)
+
+  --local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png")
+  --assertEquals(rc,0)
 
   --local str = helpers.dump_altitude_matrix(obj,{0,10,1},{0,10,1})
   --print("\n",str)

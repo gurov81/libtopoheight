@@ -207,6 +207,31 @@ int libtopoheight_get_heightmap(struct context* ctx, const double rect[4],int wi
   free(data);
 }
 
+int libtopoheight_get_vertical_profile(struct context* ctx, const double trajectory[],const int size, const int accuracy, const double deviation){
+  double x1,x2,y1,y2,alt,maxAlt[accuracy+1];
+  for(size_t i=0; i<size*2-2; i=i+2) {
+    x1 = trajectory[i];
+    y1 = trajectory[i+1];
+    x2 = trajectory[i+2];
+    y2 = trajectory[i+3];
+    for(int j = 0; j <= accuracy; j++){
+      maxAlt[j] = 0;
+      for(double k1 = -deviation; k1 <= deviation; k1+=deviation*10/accuracy){
+        for(double k2 = -deviation; k2 <= deviation; k2+=deviation*10/accuracy){
+          double coord[2] = {
+            x1 + (x2-x1)/accuracy * j + k2,
+            y1 + (y2-y1)/accuracy * j + k1
+          };
+          alt=0;
+          int rc = libtopoheight_get_alt(ctx,coord,&alt);
+          if (alt > maxAlt[j]) {maxAlt[j] = alt;}
+        }
+      }
+    }
+  }
+  return 0;
+}
+
 void libtopoheight_debug_get_counts(struct context* ctx,size_t counts[3]) {
   counts[0] = ctx->relief.points.size()*2;
   counts[1] = ctx->relief.points.size();
