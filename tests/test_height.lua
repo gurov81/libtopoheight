@@ -71,3 +71,45 @@ TestHeight['testCase_break_line'] = function()
 
   obj:destroy()
 end
+
+local checkPoint = function(obj, x, y, expected)
+  local rc,h = obj:get_alt(x, y)
+  assertEquals(rc, 0)
+  assertEquals(h, expected)
+end
+
+TestHeight['testCase_interpolation'] = function()
+  local obj = libtopoheight.new()
+  assertNotIsNil(obj)
+
+  local src_data = {
+    LineString({ {0, 0, 0}, {100, 0, 0} }),
+    LineString({ {0, 100, 20}, {100, 100, 20} }),
+    MultiPoint({ {50, 50, 30} }),
+  }
+
+  local rc = obj:load_buffer(Layer(src_data))
+  assertEquals(rc,0)
+  local rc = obj:triangulate()
+  assertEquals(rc,0)
+
+  -- corners
+  checkPoint(obj,   0,   0,  0)
+  checkPoint(obj, 100,   0,  0)
+  checkPoint(obj,   0, 100, 20)
+  checkPoint(obj, 100, 100, 20)
+  -- mid vert
+  checkPoint(obj, 50,   0,  0)
+  checkPoint(obj, 50,  25, 15)
+  checkPoint(obj, 50,  50, 30)
+  checkPoint(obj, 50,  75, 25)
+  checkPoint(obj, 50, 100, 20)
+  -- mid hor
+  checkPoint(obj,   0, 50, 10)
+  checkPoint(obj,  25, 50, 20)
+  checkPoint(obj,  50, 50, 30)
+  checkPoint(obj,  75, 50, 20)
+  checkPoint(obj, 100, 50, 10)
+
+  obj:destroy()
+end

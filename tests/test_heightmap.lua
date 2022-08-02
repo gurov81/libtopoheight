@@ -38,6 +38,20 @@ function TestHeightmap:testMap_LAYER6()
 end
 ]]
 
+function TestHeightmap:testMap_Merged()
+  local obj = libtopoheight.new()
+  assertNotIsNil(obj)
+  local rc = obj:load_file("examples/merged.geojson","SC_4")
+  assertEquals(rc,0)
+  local rc = obj:triangulate()
+  assertEquals(rc,0)
+  local rc = obj:get_heightmap({39.5, 43.333,
+                                40.5, 44.000}, 768, 768, "merged.png")
+  assertEquals(rc,0)
+  obj:destroy()
+end
+
+
 function TestHeightmap:testPolygon_WithColorCallback()
   local obj = libtopoheight.new()
   assertNotIsNil(obj)
