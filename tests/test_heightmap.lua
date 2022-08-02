@@ -51,6 +51,7 @@ function TestHeightmap:testMap_Merged()
   obj:destroy()
 end
 
+
 function TestHeightmap:testPolygon_WithColorCallback()
   local obj = libtopoheight.new()
   assertNotIsNil(obj)
@@ -70,8 +71,17 @@ function TestHeightmap:testPolygon_WithColorCallback()
   local _,_, triangles = obj:debug_get_counts()
   assertEquals(triangles,6)
 
-  local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png")
+  --local trajectory = {{0, 5},{10, 5}}
+  --local trajectory = {{0, 2},{5, 2},{5, 7},{10, 10}}
+  local trajectory = {{0, 0},{10, 0},{10, 10},{0, 10}}
+  local accuracy = 10
+  local deviation = 0.1
+  local rc = obj:get_vertical_profile(trajectory,accuracy,deviation)
+  --local rc = obj:get_vertical_profile(trajectory)
   assertEquals(rc,0)
+
+  --local rc = obj:get_heightmap({0,0,10,10},1024,1024,"2.png")
+  --assertEquals(rc,0)
 
   --local str = helpers.dump_altitude_matrix(obj,{0,10,1},{0,10,1})
   --print("\n",str)
